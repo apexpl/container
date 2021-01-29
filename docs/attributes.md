@@ -36,7 +36,7 @@ use App\Store\Product;
 // Start container
 $cntr = new Container(
     config_file: /path/to/definitions.php, 
-    use_annotations: true
+    use_attributes: true
 );
 
 // Make class
