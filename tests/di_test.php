@@ -27,9 +27,12 @@ class di_test extends TestCase
         $this->assertCount(5, $intervals);
         $this->assertContains('month', $intervals);
 
-        $order_id = Di::get('getOrderId');
+        $order_id = Di::call('getOrderId');
         $this->assertEquals(52, $order_id);
 
+        // Check closure
+        $closure = Di::get('getOrderId');
+        $this->assertTrue(is_callable($closure));
         $anno = Di::get('anno');
         $this->assertEquals(Annotations::class, $anno::class);
     }

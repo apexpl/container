@@ -37,15 +37,19 @@ class Container
     /**
      * Build container from config file
      */
-    public function buildContainer(string $config_file):void
+    public function buildContainer(string $config_file = '', array $items = []):void
     {
 
         // Purge any existing services
         $this->services = [];
-
-        // Load config file
         $config = new Config($this);
-        $this->items = $config->loadFile($config_file);
+
+        // Load array of items, if present
+        if (count($items) > 0) { 
+            $this->items = $config->loadArray($items);
+        } else { 
+            $this->items = $config->loadFile($config_file);
+        }
 
         // Check config options
         foreach (['use_autowiring', 'use_attributes', 'use_annotations'] as $var) { 
@@ -73,14 +77,13 @@ class Container
             return $this->items[$name];
         }
 
-    // Check for service
+        // Check for service
         if (isset($this->services[$name])) { 
             $svc = $this->services[$name];
 
             // Check if callable
             if (is_callable($svc)) { 
-                $this->items[$name] = call_user_func($svc);
-                return $this->items[$name];
+                return $svc;
             } else {
                 return $this->makeset($this->services[$name][0], $this->services[$name][1]);
             }
@@ -99,7 +102,7 @@ class Container
      */
     public function has(string $name):bool
     {
-        return isset($this->items[$name]) || class_exists($name) ? true : false;
+        return isset($this->items[$name]) || isset($this->services[$name]) ? true : false;
     }
 
     /**
@@ -121,11 +124,16 @@ class Container
             throw new ContainerClassNotExistsException("Unable to determine class name for item, $name");
         }
 
+        // Check for closure
+        if ($class_name == 'closure') { 
+            return $this->call($this->services[$name], $params);
+        }
+
         // Instantiate class
         $obj = new \ReflectionClass($class_name);
 
         // Get use declarations, if needed
-        if ($this->use_autowiring === true && !isset($this->use_declarations[$class_name])) { 
+        if ($this->use_autowiring === true && $obj->getFilename() && !isset($this->use_declarations[$class_name])) { 
             $this->use_declarations[$class_name] = $this->getUseDeclarations($obj->getFilename());
         }
 
@@ -174,25 +182,39 @@ class Container
     /**
      * Call a method -- setter injection
      */
-    public function call(callable | array $callable, array $params = []):mixed
+    public function call(callable | array | string $callable, array $params = []):mixed
     {
 
-        // Instantiate reflection class
-        $obj = is_callable($callable) ? $callable[0] : $this->make($callable[0]);
-        $instance = new \ReflectionClass($obj::class);
+        // Check container for item
+        if (is_string($callable) && isset($this->services[$callable]) && is_callable($this->services[$callable])) { 
+            $callable = $this->services[$callable];
+        } elseif (is_string($callable)) { 
+            throw new ContainerClassNotExistsException("No callable exists in the container with the name, $callable");
+        }
 
-        // Get method and injection params
-    $method = $instance->getMethod($callable[1]);
-    $inject_params = $this->getInjectionParams($method, $params);
+        // Instantiate reflection method
+        if (is_callable($callable) && !is_array($callable)) { 
+            $method = new \ReflectionFunction($callable);
+        } else {
+            $obj = is_object($callable[0]) ? $callable[0] : $this->make($callable[0], $params);
+            $method = new \ReflectionMethod($obj, $callable[1]);
+        }
 
-    // Call and return
-    return $method->invokeArgs($obj, $inject_params);
+        // Get injection params
+        $inject_params = $this->getInjectionParams($method, $params);
+
+        // Call and return
+        if ($method::class == 'ReflectionFunction') { 
+            return $method->invokeArgs($inject_params);
+        } else { 
+            return $method->invokeArgs($obj, $inject_params);
+        }
     }
 
     /**
      * Get injection params
      */
-    private function getInjectionParams(\ReflectionMethod $method, array $params = []):array
+    private function getInjectionParams(\ReflectionMethod | \ReflectionFunction $method, array $params = []):array
     {
 
         // Initialize
@@ -295,7 +317,9 @@ class Container
         $class_name = null;
 
         // Check defind services, and class name
-        if (isset($this->services[$name])) { 
+        if (isset($this->services[$name]) && is_callable($this->services[$name])) { 
+            $class_name = 'closure';
+        } elseif (isset($this->services[$name])) { 
             $class_name = $this->services[$name][0];
         } elseif (class_exists($name)) { 
             $class_name = $name;

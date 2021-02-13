@@ -28,8 +28,12 @@ class config_test extends TestCase
         $this->assertCount(5, $intervals);
         $this->assertContains('month', $intervals);
 
-        $order_id = $cntr->get('getOrderId');
+        $order_id = $cntr->call('getOrderId');
         $this->assertEquals(52, $order_id);
+
+        // Ensure closure is returned
+        $closure = $cntr->get('getOrderId');
+        $this->assertTrue(is_callable($closure));
 
         $anno = $cntr->get('anno');
         $this->assertEquals(Annotations::class, $anno::class);
