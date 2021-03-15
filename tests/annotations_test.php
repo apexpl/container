@@ -24,6 +24,7 @@ class annotations_test extends TestCase
             config_file: __DIR__ . '/../examples/config/examples.php', 
             use_annotations: true
         );
+        $cntr->markItemAsService(Config::class);
 
         $obj = $cntr->make(ClassAnnotations::class, ['order_id' => 89]);
         $this->assertEquals(89, $obj->order_id);

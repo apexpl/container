@@ -1,7 +1,7 @@
 <?php
 declare(strict_types = 1);
 
-use Apex\Container\{Container, Annotations};
+use Apex\Container\{Container, Annotations, Config};
 use Apex\Container\Exceptions\{ContainerFileNotExistsException, ContainerInvalidConfigException};
 use PHPUnit\Framework\TestCase;
 
@@ -20,6 +20,8 @@ class config_test extends TestCase
 
         // Load container
         $cntr = new Container(__DIR__ .'/../examples/config/sample.php');
+        $cntr->markItemAsService(Config::class);
+        $cntr->markItemAsService('anno');
         $this->assertEquals('my_database', $cntr->get('dbname'));
         $this->assertEquals('password', $cntr->get('dbpass'));
 
@@ -47,6 +49,7 @@ class config_test extends TestCase
 
         $cntr = new Container();
         $cntr->buildContainer(__DIR__ .'/../examples/config/sample.php');
+        $cntr->markItemAsService(Config::class);
         $this->assertEquals('my_database', $cntr->get('dbname'));
         $this->assertEquals('password', $cntr->get('dbpass'));
 

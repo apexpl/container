@@ -12,6 +12,7 @@ require_once(__DIR__ . '/../vendor/autoload.php');
 
 // Start container
 Di::buildContainer(__DIR__ . '/config/examples.php');
+Di::markItemAsService(Config::class);
 
 // Get dbname
 $dbname = Di::get('dbname');

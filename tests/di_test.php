@@ -19,6 +19,7 @@ class di_test extends TestCase
 
         // Load container
         Di::buildContainer(__DIR__ .'/../examples/config/sample.php');
+        Di::markItemAsService('anno');
         $this->assertEquals('my_database', Di::get('dbname'));
         $this->assertEquals('password', Di::get('dbpass'));
 

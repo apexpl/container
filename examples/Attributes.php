@@ -5,7 +5,7 @@
  * look at the ClassAttributes.php file to see what's happening.
  */
 
-use Apex\Container\Container;
+use Apex\Container\{Container, Config};
 
 // Load composer
 require_once(__DIR__ . '/../vendor/autoload.php');
@@ -22,6 +22,7 @@ $cntr = new Container(
     config_file: __DIR__ . '/config/examples.php', 
     use_attributes: true
 );
+$cntr->markItemAsService(Config::class);
 
 // Set an order id
 $cntr->set('order_id', 18553);

@@ -4,7 +4,7 @@
  * Shows examples of constructor and setter injection.
  */
 
-use Apex\Container\Container;
+use Apex\Container\{Container, Config};
 
 
 // Load composer
@@ -18,6 +18,7 @@ require_once(__DIR__ . '/ClassConstructor.php');
 
 // Start container
 $cntr = new Container(__DIR__ . '/config/examples.php');
+$cntr->markItemAsService(Config::class);
 
 /**
  * Make the ClassConstructor class with injection.  Check 

@@ -2,7 +2,7 @@
 
 namespace Apex\Container\Exceptions;
 
-class ContainerFileNotExistsException extends \RuntimeException
+class ContainerFileNotExistsException extends \RuntimeException implements ContainerExceptionInterface
 {
 
 }

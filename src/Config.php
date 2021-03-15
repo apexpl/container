@@ -50,29 +50,15 @@ class Config
     public function loadArray(array $raw_items):array
     {
 
-        // Initialize
-        $items = [];
-
         // Go through raw items
+        $items = [];
         foreach ($raw_items as $name => $item) { 
 
-            // Check whether or not item is a service
-            if (is_callable($item)) { 
-                $this->cntr->services[$name] = $item;
-
-            } elseif (is_string($item) && class_exists($item)) { 
-                $this->cntr->services[$name] = [$item, []];
-
-            } elseif (!is_array($item)) { 
-                $items[$name] = $item;
-
-            } elseif (!class_exists($item[0])) { 
-                $items[$name] = $item;
-
-            } else { 
-                $params = $item[1] ?? [];
-            $this->cntr->services[$name] = [$item[0], $params];
+            // Add item, if not already exists
+            if ($this->cntr->has($name) === true) { 
+                continue;
             }
+            $items[$name] = $value;
         }
 
         // Return

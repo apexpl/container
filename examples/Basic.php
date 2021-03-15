@@ -12,6 +12,7 @@ require_once(__DIR__ . '/../vendor/autoload.php');
 
 // Start container
 $cntr = new Container(__DIR__ . '/config/examples.php');
+$cntr->markItemAsService(Config::class);
 
 // Get dbname
 $dbname = $cntr->get('dbname');

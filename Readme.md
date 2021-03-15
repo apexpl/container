@@ -45,6 +45,22 @@ Parameter | Type | Description
 `$use_annotations` | bool | If true, will scan the properties and doc blocks of all files for injected properties.  Please see the <a href="https://github.com/apexpl/container/blob/master/docs/annotations.md">Annotation Injection</a> page for details.  Defaults to false.
 
 
+## Mark Items as Services
+
+You must explicitly mark necessary items as services, meaning the first time they are retrived from the container, they will be automatically instantiated with the new object instance set in the container for future use.  Retrieving instantiable items from the container that are not marked as services will simply return the class name / closure, and will not instantiate the object.
+
+You may easily mark items as services with the `markItemAsService()` method, for example:
+
+~~~php
+use Apex\Container\Container;
+use Apex\Psr\Log\LoggerInterface;
+
+$cntr = new Container();
+$cntr->markItemAsService(LoggerInterface::class);
+$cntr->markItemAsService('debugger');
+~~~
+
+
 ## Methods
 
 The following base methods are supported, as per all containers.
@@ -87,7 +103,7 @@ $name = Di::get('full_name');   // John Doe
 
 ## Follow Apex
 
-Loads of good things coming in the near future including new quality open source packages, more advanced articles / tutorials that go over down to earth useful topics, et al.  Stay informed by joining the <a href="https://apexpl.io/">mailing list</a> on our web site, or follow along on Twitter at <a href="https://twitter.com/ApexPlatform">@ApexPlatform</a>.
+Loads of good things coming in the near future including new quality open source packages, more advanced articles / tutorials that go over down to earth useful topics, et al.  Stay informed by joining the <a href="https://apexpl.io/">mailing list</a> on our web site, or follow along on Twitter at <a href="https://twitter.com/mdizak1">@mdizak1</a>.
 
 
 

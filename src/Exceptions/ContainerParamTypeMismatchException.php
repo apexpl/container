@@ -2,7 +2,7 @@
 
 namespace Apex\Container\Exceptions;
 
-class ContainerParamTypeMismatchException extends \RuntimeException
+class ContainerParamTypeMismatchException extends \RuntimeException implements ContainerExceptionInterface
 {
 
 }

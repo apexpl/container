@@ -1,7 +1,7 @@
 <?php
 declare(strict_types = 1);
 
-use Apex\Container\Container;
+use Apex\Container\{Container, Config};
 use PHPUnit\Framework\TestCase;
 
 
@@ -37,6 +37,7 @@ class container_test extends TestCase
         require_once(__DIR__ . '/../examples/ClassConstructor.php');
 
         $cntr = new Container(__DIR__ . '/../examples/config/examples.php');
+        $cntr->markItemAsService(Config::class);
         $obj = $cntr->make(ClassConstructor::class);
         $this->assertEquals('container_db', $obj->dbname);
         $this->assertInstanceOf(Container::class, $obj->cntr);
@@ -52,6 +53,7 @@ class container_test extends TestCase
     {
 
         $cntr = new Container(__DIR__ . '/../examples/config/examples.php');
+        $cntr->markItemAsService(Config::class);
         $res = $cntr->call([ClassConstructor::class, 'set_example'], ['name' => 'Sherlock Holmes']);
         $this->assertEquals('ok', $res);
     }

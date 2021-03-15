@@ -13,9 +13,9 @@ class Container
 {
 
     // Properties
-    public array $services = [];
-    public array $use_declarations = [];
+    private array $services = [];
     private array $items = [];
+        public array $use_declarations = [];
 
     /**
      * Constructor
@@ -46,10 +46,11 @@ class Container
 
         // Load array of items, if present
         if (count($items) > 0) { 
-            $this->items = $config->loadArray($items);
+            $new_items = $config->loadArray($items);
         } else { 
-            $this->items = $config->loadFile($config_file);
+            $new_items = $config->loadFile($config_file);
         }
+        $this->items = array_merge($new_items, $this->items);
 
         // Check config options
         foreach (['use_autowiring', 'use_attributes', 'use_annotations'] as $var) { 
@@ -60,6 +61,54 @@ class Container
 
         // Set this instance in container
         $this->set(__CLASS__, $this);
+    }
+
+    /**
+     * Mark item as service
+     */
+    public function markItemAsService(string $name):bool
+    {
+
+        // Ensure item exists, and not already service
+        if (isset($this->services[$name]) || !isset($this->items[$name])) { 
+            return false;
+        }
+
+        // Set service
+        $svc = $this->items[$name];
+            if (is_callable($svc)) { 
+            $this->services[$name] = $svc;
+        } elseif (is_array($svc) && class_exists($svc[0])) { 
+            $params = $svc[1] ?? [];
+            $this->services[$name] = [$svc[0], $params];
+        } elseif (is_string($svc) && class_exists($svc)) { 
+            $this->services[$name] = [$svc, []];
+        } else { 
+            throw new ContainerInvalidConfigException("Unable to mark item '$name' as service, as it can not be called or instantiated.");
+        }
+        unset($this->items[$name]);
+
+        // Return
+        return true;
+    }
+
+    /**
+     * Unmark item as service
+     */
+    public function unmarkItemAsService(string $name):bool
+    {
+
+        // Check if service
+        if (!isset($this->services[$name])) { 
+            return false;
+        }
+
+        // Unmark item
+        $this->items[$name] = $this->services[$name];
+        unset($this->services[$name]);
+
+        // Return
+        return true;
     }
 
     /**
@@ -83,18 +132,28 @@ class Container
 
             // Check if callable
             if (is_callable($svc)) { 
-                return $svc;
-            } else {
-                return $this->makeset($this->services[$name][0], $this->services[$name][1]);
+                $item = call_user_func($svc);
+
+            } elseif (is_array($svc) && class_exists($svc[0])) { 
+                $params = $svc[1] ?? [];
+                $item = $this->make($svc[0], $params);
+
+            } elseif (is_string($svc) && class_exists($svc)) { 
+                $item = $this->make($svc);
             }
 
-        // Check for class name
+            // Set item, if needed
+            if ($item !== null) { 
+                $this->set($name, $item);
+            }
+
+        // Check if class exists
         } elseif (class_exists($name)) { 
-            return $this->makeset($name);
+            $item = $this->make($name);
         }
 
-        // Not found
-        return null;
+        // Return
+        return $item;
     }
 
     /**
@@ -126,7 +185,7 @@ class Container
 
         // Check for closure
         if ($class_name == 'closure') { 
-            return $this->call($this->services[$name], $params);
+            return $this->call($this->items[$name], $params);
         }
 
         // Instantiate class
@@ -186,8 +245,8 @@ class Container
     {
 
         // Check container for item
-        if (is_string($callable) && isset($this->services[$callable]) && is_callable($this->services[$callable])) { 
-            $callable = $this->services[$callable];
+        if (is_string($callable) && isset($this->items[$callable]) && is_callable($this->items[$callable])) { 
+            $callable = $this->items[$callable];
         } elseif (is_string($callable)) { 
             throw new ContainerClassNotExistsException("No callable exists in the container with the name, $callable");
         }
