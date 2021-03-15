@@ -58,7 +58,7 @@ class Config
             if ($this->cntr->has($name) === true) { 
                 continue;
             }
-            $items[$name] = $value;
+            $items[$name] = $item;
         }
 
         // Return
