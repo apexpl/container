@@ -72,6 +72,8 @@ class Container
         // Ensure item exists, and not already service
         if (isset($this->services[$name]) || !isset($this->items[$name])) { 
             return false;
+        } elseif (isset($this->items[$name]) && is_object($this->items[$name])) { 
+            return false;
         }
 
         // Set service
