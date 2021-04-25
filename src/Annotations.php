@@ -39,7 +39,6 @@ class Annotations
 
             // Check doc block
             if ($item = $this->checkDocBlock($doc, $instance::class, $params)) { 
-if (!is_object($item)) { echo "ITEM: " . $prop->getName() . " -- $item\n"; }
                 $prop->setAccessible(true);
                 $prop->setValue($instance, $item);
             }
