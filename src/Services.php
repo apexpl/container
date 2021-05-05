@@ -68,8 +68,10 @@ class Services
             $this->services[$name] = [$svc[0], $params];
         } elseif (is_string($svc) && class_exists($svc)) { 
             $this->services[$name] = [$svc, []];
-        } else { 
-            throw new ContainerInvalidConfigException("Unable to mark item '$name' as service, as it can not be called or instantiated.");
+        } else {
+            unset($this->items[$name]);
+            return false;
+            //throw new ContainerInvalidConfigException("Unable to mark item '$name' as service, as it can not be called or instantiated.");
         }
         unset($this->items[$name]);
 
