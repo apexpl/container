@@ -2,7 +2,9 @@
 
 namespace Apex\Container\Exceptions;
 
-class ContainerInjectionParamNotFoundException extends \RuntimeException implements ContainerExceptionInterface
+use Psr\Container\NotFoundExceptionInterface;
+
+class ContainerInjectionParamNotFoundException extends \RuntimeException implements NotFoundExceptionInterface
 {
 
 }

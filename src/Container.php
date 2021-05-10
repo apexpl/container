@@ -4,13 +4,14 @@ declare(strict_types = 1);
 namespace Apex\Container;
 
 use Apex\Container\Services;
+use Psr\Container\ContainerInterface;
 use Apex\Container\Exceptions\{ContainerClassNotExistsException, ContainerFileNotExistsException, ContainerParamTypeMismatchException, ContainerInjectionParamNotFoundException, ContainerInvalidConfigException};
 
 
 /**
  * Lightweight DI container that is used within Apex.
  */
-class Container extends Services
+class Container extends Services implements ContainerInterface
 {
 
     /**
@@ -28,13 +29,14 @@ class Container extends Services
             $this->buildContainer($config_file);
         }
         $this->set(__CLASS__, $this);
+        $this->set(ContainerInterface::class, $this);
 
     }
 
     /**
      * Get an item
      */
-    public function get(string $name):mixed
+    public function get(string $name)
     {
 
         // Initialize
