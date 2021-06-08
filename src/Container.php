@@ -4,6 +4,7 @@ declare(strict_types = 1);
 namespace Apex\Container;
 
 use Apex\Container\Services;
+use Apex\Container\Interfaces\ApexContainerInterface;
 use Psr\Container\ContainerInterface;
 use Apex\Container\Exceptions\{ContainerClassNotExistsException, ContainerFileNotExistsException, ContainerParamTypeMismatchException, ContainerInjectionParamNotFoundException, ContainerInvalidConfigException};
 
@@ -11,7 +12,7 @@ use Apex\Container\Exceptions\{ContainerClassNotExistsException, ContainerFileNo
 /**
  * Lightweight DI container that is used within Apex.
  */
-class Container extends Services implements ContainerInterface
+class Container extends Services implements ContainerInterface, ApexContainerInterface
 {
 
     /**
@@ -28,9 +29,11 @@ class Container extends Services implements ContainerInterface
         if ($config_file != '') { 
             $this->buildContainer($config_file);
         }
-        $this->set(__CLASS__, $this);
-        $this->set(ContainerInterface::class, $this);
 
+        // ADd container as item
+        $this->set(ContainerInterface::class, $this);
+        $this->addAlias(__CLASS__, ContainerInterface::class, false);
+        $this->addAlias(ApexContainerInterface::class, ContainerInterface::class, false);
     }
 
     /**
@@ -152,7 +155,7 @@ class Container extends Services implements ContainerInterface
     /**
      * Make item, and set it into container as item.
      */
-    public function makeset(string $name, array $params = [])
+    public function makeset(string $name, array $params = []):mixed
     {
 
         // Make the item
@@ -206,6 +209,7 @@ class Container extends Services implements ContainerInterface
         // Initialize
         $inject_params = [];
         $method_params = $method->getParameters();
+        $class = $method->getDeclaringClass()->getName();
 
         // Go through params
         foreach ($method_params as $param) { 
@@ -215,7 +219,7 @@ class Container extends Services implements ContainerInterface
             $type = $param?->getType();
 
             // If passed parameters have matching name
-            if (isset($params[$name])) {
+            if (array_key_exists($name, $params)) { 
 
                 // Compare, and ensure types match
                 if (!$this->compareParamType($params[$name], $type)) { 
@@ -229,16 +233,19 @@ class Container extends Services implements ContainerInterface
 
             // Check container for type
             $type = $type?->getName();
-            if ($type !== null && $value = $this->get($type)) { 
-                $inject_params[$name] = $value;
+            if (isset($this->items[$name])) { 
+                $inject_params[$name] = $this->get($name);
 
-            } elseif (isset($this->items[$name])) { 
-                $inject_params[$name] = $this->items[$name];
+            } elseif ($type == 'DateTime') { 
+                $inject_params[$name] = $param->allowsNull() === true ? null : new \DateTime();
+
+            } elseif ($type !== null && ($val = $this->get($type)) !== null) { 
+                $inject_params[$name] = $val;
 
             } elseif ($param->isDefaultValueAvailable() === true) { 
                 $inject_params[$name] = $param->getDefaultValue();
 
-            } elseif ($param->isOptional() === true) { 
+            } elseif ($param->isOptional() === true || $param->allowsNull() === true) { 
                 $inject_params[$name] = null;
 
             // Unable to find value for required injection param
@@ -260,6 +267,10 @@ class Container extends Services implements ContainerInterface
         // Ensure valid type
         $chk_type = $chk?->getName();
         if ($chk_type === null || $chk_type == '') { 
+            return true;
+
+        // Check for null
+        } elseif ($chk->allowsNull() === true && $item === null) { 
             return true;
         }
 

@@ -4,6 +4,7 @@ declare(strict_types = 1);
 namespace Apex\Container;
 
 use Apex\Container\Container;
+use Apex\Container\Interfaces\ApexContainerInterface;
 
 
 /**
@@ -21,7 +22,7 @@ class Di
     private static bool $use_annotations = false;
 
     // Container instance
-    private static ?Container $instance = null;
+    private static ?ApexContainerInterface $instance = null;
 
     /**
      * Calls a method of the instance.
@@ -41,6 +42,22 @@ class Di
 
         // Call method, and return 
         return self::$instance->$method(...$params);
+    }
+
+    /**
+     * Set instance
+     */
+    public static function setContainer(ApexContainerInterface $cntr):void
+    {
+        self::$instance = $cntr;
+    }
+
+    /**
+     * Get instance
+     */
+    public static function getContainer():?ApexContainerInterface
+    {
+        return self::$instance;
     }
 
 }

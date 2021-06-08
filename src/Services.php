@@ -16,6 +16,7 @@ class Services
     protected array $services = [];
     protected array $items = [];
     protected array $aliases = [];
+    protected string $fail_reason = '';
         public array $use_declarations = [];
 
     /**
@@ -42,8 +43,14 @@ class Services
             }
         }
 
-        // Set this instance in container
+    }
 
+    /**
+     * Get fail reason
+     */
+    public function getFailReason():string
+    {
+        return $this->fail_reason;
     }
 
     /**
@@ -53,9 +60,14 @@ class Services
     {
 
         // Ensure item exists, and not already service
-        if (isset($this->services[$name]) || !isset($this->items[$name])) { 
+        if (isset($this->services[$name])) { 
+            $this->fail_reason = "Item is already marked as a service, $name";
+            return false;
+        } elseif (!isset($this->items[$name])) { 
+            $this->fail_reason = "Item does not exist in container, $name";
             return false;
         } elseif (isset($this->items[$name]) && is_object($this->items[$name] && !is_callable($this->items[$name]))) { 
+            $this->fail_reason = "Item already exists and is instantiated, $name";
             return false;
         }
 
@@ -69,6 +81,7 @@ class Services
         } elseif (is_string($svc) && class_exists($svc)) { 
             $this->services[$name] = [$svc, []];
         } else {
+            $this->fail_reason = "Unable to instantiate the item, " . $this->items[$name][0] . " for the service, $name.  Removing item from container.";
             unset($this->items[$name]);
             return false;
             //throw new ContainerInvalidConfigException("Unable to mark item '$name' as service, as it can not be called or instantiated.");
@@ -101,9 +114,13 @@ class Services
     /**
      * Add alias
      */
-    public function addAlias(string $alias, string $value):void
+    public function addAlias(string $alias, string $value, bool $alias_class = true):void
     {
         $this->aliases[$alias] = $value;
+
+        if ($alias_class === true) { 
+            class_alias($value, $alias);
+        }
     }
 
     /**

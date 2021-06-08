@@ -50,8 +50,9 @@ class Attributes
      */
     private function checkAttribute(\ReflectionAttribute $attr, string $class_name, array $params = []):mixed
     {
+
         // Check for Inject attribute
-        if ($attr->getName() != 'Inject') { 
+        if (!str_ends_with($attr->getName(), 'Inject')) { 
             return null;
         }
 
