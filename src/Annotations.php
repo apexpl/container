@@ -83,11 +83,6 @@ class Annotations
         // Check use declarations for injection
         if ($is_inject === true && isset($use[$var_name]) && $this->cntr->has($use[$var_name])) { 
             $var_name = $use[$var_name];
-
-            // Check services container for name
-            if (isset($this->services[$var_name])) { 
-                $var_name = $this->services[$name][0];
-            }
         }
 
         // Check for injection

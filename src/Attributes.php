@@ -73,11 +73,6 @@ class Attributes
         // Check use declarations
         if (isset($use[$var_name]) && $this->cntr->has($use[$var_name])) { 
             $var_name = $use[$var_name];
-
-            // Check services container for name
-            if (isset($this->services[$var_name])) { 
-                $var_name = $this->services[$name][0];
-            }
         }
 
 

@@ -19,11 +19,16 @@ class Container extends Services implements ContainerInterface, ApexContainerInt
      * Constructor
      */
     public function __construct(
-        private string $config_file = '', 
-        private bool $use_autowiring = true,
-        private $use_attributes = false,  
-        private bool $use_annotations = false
+        protected string $config_file = '', 
+        bool $use_autowiring = true,
+        bool $use_attributes = false,  
+        bool $use_annotations = false
     ) {
+
+        // Set properties
+        $this->use_autowiring = $use_autowiring;
+        $this->use_annotations = $use_annotations;
+        $this->use_attributes = $use_attributes;
 
         // Build container, if config file defined
         if ($config_file != '') { 
@@ -250,7 +255,8 @@ class Container extends Services implements ContainerInterface, ApexContainerInt
 
             // Unable to find value for required injection param
             } else {    
-                throw new ContainerInjectionParamNotFoundException("Unable to determine injection parameter for '$name' within method '" . $method->getName() . "'");
+                $method_name = $method->getDeclaringClass()->getName() . '::' . $method->getName();
+                throw new ContainerInjectionParamNotFoundException("Unable to determine injection parameter for '$name' within method '$method_name'");
             }
         }
 

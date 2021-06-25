@@ -17,7 +17,10 @@ class Services
     protected array $items = [];
     protected array $aliases = [];
     protected string $fail_reason = '';
-        public array $use_declarations = [];
+    public array $use_declarations = [];
+    protected bool $use_autowiring = false;
+    protected bool $use_annotations = false;
+    protected bool $use_attributes = false;
 
     /**
      * Build container from config file
@@ -38,8 +41,8 @@ class Services
 
         // Check config options
         foreach (['use_autowiring', 'use_attributes', 'use_annotations'] as $var) { 
-            if ($value = $this->get($var) && is_bool($value)) { 
-                $this->$var = $value;
+            if (isset($this->items[$var]) && is_bool($this->items[$var])) {  
+                $this->$var = $this->items[$var];
             }
         }
 
