@@ -214,7 +214,13 @@ class Container extends Services implements ContainerInterface, ApexContainerInt
         // Initialize
         $inject_params = [];
         $method_params = $method->getParameters();
-        $class = $method->getDeclaringClass()->getName();
+
+        // Get declaring class
+        if ($method::class == 'ReflectionFunction') { 
+            $class = 'closure';
+        } else { 
+            $class = $method->getDeclaringClass()->getName();
+        }
 
         // Go through params
         foreach ($method_params as $param) { 
