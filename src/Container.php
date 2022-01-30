@@ -83,7 +83,7 @@ class Container extends Services implements ContainerInterface, ApexContainerInt
             }
 
         // Check if class exists
-        } elseif (class_exists($name)) { 
+        } elseif (class_exists($name) && !enum_exists($name)) { 
             $item = $this->make($name);
         }
 
@@ -237,6 +237,12 @@ class Container extends Services implements ContainerInterface, ApexContainerInt
                     throw new ContainerParamTypeMismatchException("Parameter type mismatch during injection.  Within method '" . $method->getName() . "' the parameter '$name' is expecting type '" . $type?->getName() . "'");
                 }
 
+                // Check for enum
+                $chk_type = $type?->getName();
+                if ($chk_type !== null && enum_exists($chk_type) && is_scalar($params[$name])) {
+                    $params[$name] = $chk_type::from($params[$name]);
+                }
+
                 // Add to injected params
                 $inject_params[$name] = $params[$name];
                 continue;
@@ -283,6 +289,10 @@ class Container extends Services implements ContainerInterface, ApexContainerInt
 
         // Check for null
         } elseif ($chk->allowsNull() === true && $item === null) { 
+            return true;
+
+        // Check for enum
+        } elseif (enum_exists($chk_type)) {
             return true;
         }
 
