@@ -234,13 +234,15 @@ class Container extends Services implements ContainerInterface, ApexContainerInt
 
                 // Compare, and ensure types match
                 if (!$this->compareParamType($params[$name], $type)) { 
-                    throw new ContainerParamTypeMismatchException("Parameter type mismatch during injection.  Within method '" . $method->getName() . "' the parameter '$name' is expecting type '" . $type?->getName() . "'");
+                    throw new ContainerParamTypeMismatchException("Parameter type mismatch during injection.  Within method '" . $class . '::' . $method->getName() . "' the parameter '$name' is expecting type '" . $type?->getName() . "'");
                 }
 
                 // Check for enum
-                $chk_type = $type?->getName();
-                if ($chk_type !== null && enum_exists($chk_type) && is_scalar($params[$name])) {
-                    $params[$name] = $chk_type::from($params[$name]);
+                if ($type::class != 'ReflectionUnionType') {
+                    $chk_type = $type?->getName();
+                    if ($chk_type !== null && enum_exists($chk_type) && is_scalar($params[$name])) {
+                        $params[$name] = $chk_type::from($params[$name]);
+                    }
                 }
 
                 // Add to injected params
@@ -248,28 +250,28 @@ class Container extends Services implements ContainerInterface, ApexContainerInt
                 continue;
             }
 
-            // Check container for type
-            $type = $type?->getName();
-            if (isset($this->items[$name])) { 
-                $inject_params[$name] = $this->get($name);
+            // Get types
+        $has_value=false;
+            $types = $type !== null && $type::class == 'ReflectionUnionType' ? $type->getTypes() : [$type];
+            foreach ($types as $tmp_type) {
 
-            } elseif ($type == 'DateTime') { 
-                $inject_params[$name] = $param->allowsNull() === true ? null : new \DateTime();
+                list($found, $value) = $this->getIndividualParam($param, $tmp_type);
+                if ($found === false) {
+                    continue;
+                }
 
-            } elseif ($type !== null && ($val = $this->get($type)) !== null) { 
-                $inject_params[$name] = $val;
+                // Found value for param
+                $inject_params[$name] = $value;
+                $has_value = true;
+                break;
+            }
 
-            } elseif ($param->isDefaultValueAvailable() === true) { 
-                $inject_params[$name] = $param->getDefaultValue();
-
-            } elseif ($param->isOptional() === true || $param->allowsNull() === true) { 
-                $inject_params[$name] = null;
-
-            // Unable to find value for required injection param
-            } else {    
+            // Check for no value
+            if ($has_value === false) {
                 $method_name = $method->getDeclaringClass()->getName() . '::' . $method->getName();
                 throw new ContainerInjectionParamNotFoundException("Unable to determine injection parameter for '$name' within method '$method_name'");
             }
+
         }
 
         // Return
@@ -277,10 +279,52 @@ class Container extends Services implements ContainerInterface, ApexContainerInt
     }
 
     /**
+     * Get individual injection param
+     */
+    private function getIndividualParam(\ReflectionParameter $param, ?\ReflectionType $type):array
+    {
+
+        // Initialize
+        $type = $type?->getName();
+        $name = $param->getName();
+
+        // Check for value
+        $value = null; $found = true;
+        if (isset($this->items[$name])) { 
+            $value = $this->get($name);
+        } elseif ($type == 'DateTime') { 
+            $value = $param->allowsNull() === true ? null : new \DateTime();
+        } elseif ($type !== null && ($val = $this->get($type)) !== null) { 
+            $value = $val;
+        } elseif ($param->isDefaultValueAvailable() === true) { 
+            $value = $param->getDefaultValue();
+        } elseif ($param->isOptional() === true || $param->allowsNull() === true) { 
+            $value = null;
+        } else {    
+            $found = false;
+        }
+
+        // Return
+        return [$found, $value];
+    }
+
+
+    /**
      * Compare variable against a type.
      */
     private function compareParamType(mixed $item, ?\ReflectionType $chk):bool
     {
+
+        // Set for reflection union type
+        if ($chk::class == 'ReflectionUnionType') {
+
+            foreach ($chk->getTypes() as $union_type) {
+                if ($this->compareParamType($item, $union_type) === true) {
+                    return true;
+                }
+            }
+            return false;
+        }
 
         // Ensure valid type
         $chk_type = $chk?->getName();
