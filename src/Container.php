@@ -10,7 +10,7 @@ use Apex\Container\Exceptions\{ContainerClassNotExistsException, ContainerFileNo
 
 
 /**
- * Lightweight DI container that is used within Apex.
+ * Lightweight dependancy injection container that is used within Apex.
  */
 class Container extends Services implements ContainerInterface, ApexContainerInterface
 {
