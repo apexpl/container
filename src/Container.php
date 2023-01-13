@@ -21,7 +21,7 @@ class Container extends Services implements ContainerInterface, ApexContainerInt
     public function __construct(
         protected string $config_file = '', 
         bool $use_autowiring = true,
-        bool $use_attributes = false,  
+        bool $use_attributes = true,  
         bool $use_annotations = false
     ) {
 
