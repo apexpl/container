@@ -233,8 +233,9 @@ class Container extends Services implements ContainerInterface, ApexContainerInt
             if (array_key_exists($name, $params)) { 
 
                 // Compare, and ensure types match
-                if (!$this->compareParamType($params[$name], $type)) { 
-                    throw new ContainerParamTypeMismatchException("Parameter type mismatch during injection.  Within method '" . $class . '::' . $method->getName() . "' the parameter '$name' is expecting type '" . $type?->getName() . "'");
+                if (!$this->compareParamType($params[$name], $type)) {
+                $type_name = method_exists($type, 'getName') ? $type?->getName() : 'union type';
+                    throw new ContainerParamTypeMismatchException("Parameter type mismatch during injection.  Within method '" . $class . '::' . $method->getName() . "' the parameter '$name' is expecting type, $type_name");
                 }
 
                 // Check for enum
