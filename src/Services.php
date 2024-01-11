@@ -32,7 +32,7 @@ class Services
         $config = new Config($this);
 
         // Load array of items, if present
-        if (count($items) > 0) { 
+        if (count($items) > 0 || $config_file == '') { 
             $new_items = $config->loadArray($items);
         } else { 
             $new_items = $config->loadFile($config_file);

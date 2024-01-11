@@ -114,8 +114,10 @@ class Container extends Services implements ContainerInterface, ApexContainerInt
     {
 
         // Get class name
-        if (!$class_name = $this->getClassName($name)) { 
+        if (!list($class_name, $tmp_params) = $this->getClassName($name)) { 
             throw new ContainerClassNotExistsException("Unable to determine class name for item, $name");
+        } elseif ($tmp_params !== null && count($params) == 0) {
+            $params = $tmp_params;
         }
 
         // Check for closure
@@ -374,23 +376,29 @@ class Container extends Services implements ContainerInterface, ApexContainerInt
     /**
      * Get class name of an item.
      */
-    private function getClassName(string $name):?string
+    private function getClassName(string $name):?array
     {
 
         // Initialize
         $class_name = null;
+        $params = null;
 
         // Check defind services, and class name
         if (isset($this->services[$name]) && is_callable($this->services[$name])) { 
             $class_name = 'closure';
         } elseif (isset($this->services[$name])) { 
             $class_name = $this->services[$name][0];
+        } else if (isset($this->items[$name]) && is_array($this->items[$name]) && class_exists($this->items[$name][0])) {
+            $class_name = $this->items[$name][0];
+            $params = $this->items[$name][1];
+        } else if (isset($this->items[$name]) && is_string($this->items[$name]) && class_exists($this->items[$name])) {
+            $class_name = $this->items[$name];
         } elseif (class_exists($name)) { 
             $class_name = $name;
         }
 
         // Return
-        return $class_name;
+        return [$class_name, $params];
 
     }
 
